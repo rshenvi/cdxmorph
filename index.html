@@ -149,8 +149,8 @@ footer{border-top:1px solid var(--line);padding:2rem 0 2.6rem;font-size:.9rem;co
         <a class="btn btn-ghost" href="cdxmorph.zip">Download for Mac &amp; Windows</a>
         <a class="btn btn-ghost" href="example.cdxml">Example file</a>
       </div>
-      <p class="meta">Nothing to install: the program runs inside your browser, and your
-      file stays on your own computer — there is no server behind this page. The download
+      <p class="meta">Nothing to install: the program runs inside your browser. Your
+      file stays on your computer — there is no server behind this page. The download
       is the same program for offline use, and the only way to write MP4.</p>
     </div>
     <figure>
@@ -162,24 +162,23 @@ footer{border-top:1px solid var(--line);padding:2rem 0 2.6rem;font-size:.9rem;co
         </picture>
       </div>
       <figcaption>Two reorientations and a reaction, from one ChemDraw page with no
-      configuration: the copies carrying 3D coordinates supply the turns, the arrow
-      drives the reaction.</figcaption>
+      configuration necessary: 3D coordinates from .cif files, if available, guide the turns, and the arrow
+      drives the reaction. See the Example file. </figcaption>
     </figure>
   </div>
 </div>
 
 <section id="what" class="wrap">
-  <h2>What it does</h2>
-  <p class="sub">It follows the drawing rather than a model of the molecule, so what comes
-  out looks like what you drew.</p>
+  <h2>What does it do?</h2>
+  <p class="sub">The program follows your drawing rather than a molecular model, so animations look
+  like what you drew.</p>
   <div class="cards">
     <div class="card">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 6h15"/><path d="m15.4 2.6 3.6 3.4-3.6 3.4"/>
         <path d="M4 14h15M4 17.5h15M4 21h15"/></svg>
       <h3>Reactions and reorientations</h3>
-      <p>An arrow means one structure becoming another; an equivalency sign means the
-      same molecule redrawn another way, which turns rather than morphs. Both play in
+      <p>An arrow denotes the transformation of one structure to another; an equivalency sign denotes a reorientation of the same molecule. Both play in
       one clip.</p>
     </div>
     <div class="card">
@@ -188,33 +187,33 @@ footer{border-top:1px solid var(--line);padding:2rem 0 2.6rem;font-size:.9rem;co
         <path d="M3.4 12 12 14.6l8.6-2.6"/>
         <path d="M12 2.2v12.4M12 14.6v7.2"/></svg>
       <h3>Turns from a crystal structure</h3>
-      <p>Place a copy carrying 3D coordinates above the drawing you want animated and it
-      supplies the axis and angle. That copy is never drawn — your own drawing moves.</p>
+      <p>Place a .cif structure carrying 3D coordinates above your drawing; the program
+      supplies the axis and angle. This copy helps reorientation but it is never rendered — only your own drawing moves.</p>
     </div>
     <div class="card">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 18 4M9 5h10v10"/><circle cx="6" cy="16" r="2.2"/></svg>
       <h3>Clean line art, every frame</h3>
-      <p>Bonds keep their width, letters stay readable, and the white gaps where bonds
-      cross are recomputed as things move rather than baked in.</p>
+      <p>Bonds keep their width, letters stay readable, and the white bond borders
+      cross are recomputed as objects that move.</p>
     </div>
     <div class="card">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 7.4 19 3.6v7.6Z" fill="currentColor" stroke="none"/>
         <path d="M5.2 17.3v1M8.4 16.75v2.1M11.6 16.2v3.2M14.8 15.65v4.3M18 15.1v5.4"/></svg>
       <h3>Wedges, charges, labels</h3>
-      <p>Solid and hashed wedges, formal charges, stacked labels, subscripts and colours
-      come out as you drew them.</p>
+      <p>Solid and hashed wedges, formal charges, stacked labels, subscripts and colors
+      appear as drawn.</p>
     </div>
     <div class="card">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6.8 15.6 17.2"/></svg>
-      <h3>You decide what becomes what</h3>
-      <p>When the automatic pairing isn't what you meant, click an atom on the left and
+      <h3>Atom mapping</h3>
+      <p>When the automatic pairing is not accurate, click an atom on the left and
       its partner on the right. Bonds that break turn red, bonds that form turn green.</p>
     </div>
     <div class="card">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3Z"/></svg>
       <h3>GIF, MP4 or frames</h3>
-      <p>Choose the length, frame rate and pixel width; get an animated GIF, an MP4, or a
+      <p>Choose the length, frame rate and pixel width; obtain an animated GIF, an MP4, or a
       numbered sequence of frames for a figure.</p>
     </div>
   </div>
@@ -223,7 +222,7 @@ footer{border-top:1px solid var(--line);padding:2rem 0 2.6rem;font-size:.9rem;co
 <section id="page" class="wrap">
   <h2>How it reads your page</h2>
   <p class="sub">Order and intent come from the drawing itself — no configuration file
-  needed for the common cases.</p>
+  needed.</p>
   <div class="reads">
     <div>
       <span class="glyph">&rarr;</span>
@@ -234,8 +233,7 @@ footer{border-top:1px solid var(--line);padding:2rem 0 2.6rem;font-size:.9rem;co
     <div>
       <span class="glyph">&#8801;</span>
       <strong>An equivalency sign</strong>
-      <p>The same molecule, drawn another way. It turns about the axis the two drawings
-      imply instead of morphing between them.</p>
+      <p>The same molecule, drawn another way. Rotation about an axis changes your perspective on a molecule.</p>
     </div>
     <div>
       <span class="glyph">&#9651;</span>
