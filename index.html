@@ -98,8 +98,14 @@ h2{font-size:clamp(1.3rem,2.4vw,1.6rem);letter-spacing:-.018em;margin:0 0 .35rem
 
 /* ---------- steps ---------- */
 ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:grid;gap:.9rem}
+/* Each li is a two-column grid: the number, then the words.  EVERY child of a
+   grid container becomes an item - including a bare run of text - so the words
+   live in ONE <span>.  Without it, a link or a bold phrase mid-sentence takes
+   the text column and the words after it drop into the next row, under the
+   number. */
 ol.steps li{counter-increment:s;display:grid;grid-template-columns:2rem 1fr;gap:.9rem;
             align-items:start;font-size:.97rem;color:var(--ink-2)}
+ol.steps li > span{grid-column:2}
 ol.steps li::before{content:counter(s);width:2rem;height:2rem;border-radius:50%;
             background:var(--accent-soft);color:var(--accent-ink);font-weight:660;font-size:.9rem;
             display:grid;place-items:center}
@@ -244,11 +250,11 @@ footer{border-top:1px solid var(--line);padding:2rem 0 2.6rem;font-size:.9rem;co
   <h2>Using it</h2>
   <p class="sub">Four steps, and nothing to configure for a first look.</p>
   <ol class="steps">
-    <li>Draw your structures in ChemDraw and save as ChemDraw XML — <code>.cdxml</code>.</li>
-    <li>Open <a href="run.html">Run it in your browser</a> and drop the file in.</li>
-    <li>Choose length and size, then download the animation.</li>
-    <li>If an atom travels somewhere you didn't intend, open the mapping editor, click the
-    atom and its partner, paste the mapping back, and render again.</li>
+    <li><span>Draw your structures in ChemDraw and save as ChemDraw XML (.cdxml).</span></li>
+    <li><span><a href="run.html">Open the tool</a> and drag your file onto the page.</span></li>
+    <li><span>Choose length and size, then download the animation.</span></li>
+    <li><span>If an atom travels somewhere you didn't intend, open the mapping editor, click
+    the atom and its partner, press <strong>Save mapping</strong>, and render again.</span></li>
   </ol>
   <p class="note">The first render takes a minute to get going, because your browser is
   downloading Python and the scientific libraries; it keeps them afterwards. If you would
