@@ -53,7 +53,11 @@ input[type=number],select{width:100%;font:inherit;padding:.45rem .55rem;color:va
      background:var(--bg);border:1px solid var(--line);border-radius:8px}
 .check{display:flex;align-items:center;gap:.45rem;font-size:.92rem;color:var(--ink-2)}
 #log{font:.84rem/1.5 var(--mono);color:var(--ink-3);white-space:pre-wrap;margin:.7rem 0 0;
-     max-height:9rem;overflow:auto}
+     max-height:9rem;overflow:auto;padding:.45rem .55rem;border-radius:8px;
+     background:transparent;transition:background-color .12s linear,color .12s linear}
+/* a brief flip to negative on every step, so a long render visibly starts */
+#log.flash{background:var(--ink);color:var(--paper)}
+@media (prefers-reduced-motion:reduce){#log{transition:none}}
 table{border-collapse:collapse;width:100%;font-size:.9rem}
 th,td{text-align:left;padding:.35rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
 th{color:var(--ink-3);font-weight:600}
@@ -176,9 +180,17 @@ const logEl = $("log");
 let worker = null, pending = new Map(), seq = 0;
 let fileName = null, fileBytes = null, config = null;
 
+let flashTimer = null;
+function flash() {
+  logEl.classList.add("flash");
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => logEl.classList.remove("flash"), 420);
+}
+
 function say(text) {
   logEl.textContent += (logEl.textContent ? "\n" : "") + text;
   logEl.scrollTop = logEl.scrollHeight;
+  flash();
 }
 
 function ensureWorker() {
@@ -208,6 +220,7 @@ function ask(cmd, extra) {
 
 function busy(on) {
   for (const id of ["render", "still", "editors"]) $(id).disabled = on;
+  if (on) flash();
 }
 
 function download(bytes, name, type) {
@@ -253,13 +266,16 @@ function show(rep) {
   const rows = (rep.stages || []).map((s, i) => {
     const kind = s.kind === "turn" ? "reorientation"
                : (s.kind === "morph" ? "reaction" : "transition");
-    const detail = s.bonds ? s.bonds : (s.rotation_deg ?
-                   s.rotation_deg + "°" : "from the 3D coordinates");
+    const detail = s.kind === "turn"
+      ? ((s.rotation_deg ? s.rotation_deg + "° turn" : "turn") +
+         (s.bonds ? ", " + s.bonds + " bonds carried" : "") +
+         (s.pairing ? " (" + s.pairing + ")" : ""))
+      : (s.bonds || "—");
     return "<tr><td>" + (i + 1) + "</td><td><span class='kind'>" + kind +
            "</span></td><td>" + detail + "</td></tr>";
   }).join("");
   $("stages").innerHTML = rows
-    ? "<table><tr><th>Step</th><th>Kind</th><th>Bonds carried over</th></tr>" +
+    ? "<table><tr><th>Step</th><th>Kind</th><th>What happens</th></tr>" +
       rows + "</table>"
     : "<p>No animated step found on this page.</p>";
   $("summary").classList.remove("hide");
@@ -322,13 +338,13 @@ $("still").onclick = async () => {
   busy(false);
 };
 
-let mappings = {}, pages = [];
+let mappings = {}, pages = [], kindOf = {};
 
 function showSaved() {
   const keys = Object.keys(mappings).sort();
   $("saved").innerHTML = keys.length
     ? "Saved pairings: " + keys.map(k =>
-        "<span class='chip'>transition " + k + " (" +
+        "<span class='chip'>" + (kindOf[k] || "transition " + k) + " (" +
         Object.keys(mappings[k].pairs || {}).length + " pairs)" +
         "<button title='forget this one' data-drop='" + k + "'>&times;</button></span>"
       ).join(" ")
@@ -353,8 +369,8 @@ async function refresh() {
 function openEditor(i) {
   const p = pages[i];
   $("edframe").srcdoc = p.html;
-  $("edstate").textContent = "transition " + p.stage + " — click an atom on the left, " +
-                             "then its partner on the right, then Save mapping";
+  $("edstate").textContent = (p.name || ("transition " + p.stage)) +
+    " — click an atom on the left, then its partner on the right, then Save mapping";
   $("edtabs").querySelectorAll(".tab").forEach((t, j) =>
     t.setAttribute("aria-current", j === i ? "true" : "false"));
 }
@@ -370,9 +386,11 @@ $("editors").onclick = async () => {
       say("this page has no reaction to pair — every step is a reorientation");
     } else {
       $("edtabs").innerHTML = "";
+      kindOf = {};
+      pages.forEach(p => { kindOf[String(p.stage)] = p.name || ("transition " + p.stage); });
       pages.forEach((p, i) => {
         const t = document.createElement("button");
-        t.className = "tab"; t.textContent = "transition " + p.stage;
+        t.className = "tab"; t.textContent = p.name || ("transition " + p.stage);
         t.onclick = () => openEditor(i);
         $("edtabs").appendChild(t);
       });
@@ -393,8 +411,9 @@ window.addEventListener("message", (ev) => {
   if (!d || d.cdxmorph !== "mapping") return;
   mappings[String(d.stage)] = d.mapping;
   showSaved();
-  say("saved " + Object.keys(d.mapping.pairs || {}).length +
-      " pairs for transition " + d.stage + " — render again to use it");
+  say("saved " + Object.keys(d.mapping.pairs || {}).length + " pairs for " +
+      (kindOf[String(d.stage)] || ("transition " + d.stage)) +
+      " — render again to use it");
   refresh();
 });
 

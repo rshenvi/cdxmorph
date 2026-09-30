@@ -47,7 +47,7 @@ async function boot() {
 
   /* The wheel's name is kept in a one-line text file so that updating the
    * program means replacing two files and editing nothing. */
-  let wheel = "cdxmorph-1.3.2-py3-none-any.whl";
+  let wheel = "cdxmorph-1.3.3-py3-none-any.whl";
   try {
     const r = await fetch("wheel.txt", { cache: "no-store" });
     if (r.ok) {
