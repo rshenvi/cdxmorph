@@ -96,6 +96,17 @@ h2{font-size:clamp(1.3rem,2.4vw,1.6rem);letter-spacing:-.018em;margin:0 0 .35rem
 .reads strong{display:block;margin:.5rem 0 .3rem;font-size:.97rem}
 .reads p{margin:0;font-size:.93rem;color:var(--ink-2)}
 
+/* Line breaks are the browser's, not the file's: HTML collapses newlines, so
+   where a line ends depends on the width available.  These two ask for better
+   break points - `balance` evens the lines of a short block, `pretty` keeps a
+   lone word off the last line - and a browser that lacks them just wraps as
+   before.  To force a specific break, put <br> in the text; to stop one
+   splitting a phrase, join those words with &nbsp; or wrap them in
+   <span class="keep">. */
+h1,.lede,h2,.sub,figcaption,.card h3,.reads strong{text-wrap:balance}
+p,li,.meta,.note{text-wrap:pretty}
+.keep{white-space:nowrap}
+
 /* ---------- steps ---------- */
 ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:grid;gap:.9rem}
 /* Each li is a two-column grid: the number, then the words.  EVERY child of a
