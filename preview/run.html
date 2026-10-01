@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Run cdxmorph in your browser</title>
+<style>
+:root{
+  --ink:#14161a; --ink-2:#3d444d; --ink-3:#6b7480;
+  --paper:#ffffff; --bg:#f6f6f4; --line:#e4e4df;
+  --accent:#d9a132; --accent-soft:#f6e6c2; --accent-ink:#5a3f08;
+  --radius:14px; --shadow:0 1px 2px rgba(20,22,26,.05),0 8px 24px -12px rgba(20,22,26,.18);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--ink:#f0f1f3;--ink-2:#c2c7cf;--ink-3:#8d95a0;--paper:#191c21;--bg:#111317;
+        --line:#2b3038;--accent:#e8b84b;--accent-soft:#3a2f16;--accent-ink:#f3d894;
+        --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.7)}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans);
+     -webkit-font-smoothing:antialiased}
+a{color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px}
+code,kbd{font:.88em/1 var(--mono);background:var(--accent-soft);color:var(--accent-ink);
+     padding:.15em .4em;border-radius:5px}
+.wrap{width:min(980px,100% - 2.5rem);margin-inline:auto}
+header{border-bottom:1px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:5}
+.bar{display:flex;align-items:center;gap:1rem;padding:.7rem 0;font-size:.95rem}
+.brand{font-weight:650;display:flex;align-items:center;gap:.5rem}
+.brand .hex{color:var(--accent)}
+.bar .sp{margin-left:auto;color:var(--ink-2)}
+.bar a{text-decoration:none}
+h1{font-size:clamp(1.6rem,3.6vw,2.2rem);letter-spacing:-.02em;margin:1.8rem 0 .4rem}
+.lede{color:var(--ink-2);margin:0 0 1.4rem;max-width:44em}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+      padding:1.15rem 1.25rem;margin:1rem 0;box-shadow:var(--shadow)}
+.card h2{font-size:1.02rem;margin:0 0 .7rem;font-weight:640}
+.drop{border:1.5px dashed var(--line);border-radius:var(--radius);padding:2rem 1.25rem;
+      text-align:center;background:var(--paper);transition:border-color .15s,background .15s}
+.drop.hot{border-color:var(--accent);background:var(--accent-soft)}
+.drop p{margin:.4rem 0 0;color:var(--ink-3);font-size:.92rem}
+.btn{display:inline-flex;align-items:center;gap:.45rem;background:var(--ink);color:var(--paper);
+     border:0;font:inherit;font-weight:600;padding:.6rem 1.05rem;border-radius:9px;cursor:pointer}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.9rem}
+label{display:block;font-size:.82rem;color:var(--ink-3);margin-bottom:.25rem}
+input[type=number],select{width:100%;font:inherit;padding:.45rem .55rem;color:var(--ink);
+     background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.check{display:flex;align-items:center;gap:.45rem;font-size:.92rem;color:var(--ink-2)}
+#log{font:.84rem/1.5 var(--mono);color:var(--ink-3);white-space:pre-wrap;margin:.7rem 0 0;
+     max-height:9rem;overflow:auto;padding:.45rem .55rem;border-radius:8px;
+     background:transparent;transition:background-color .12s linear,color .12s linear}
+/* a brief flip to negative on every step, so a long render visibly starts */
+#log.flash{background:var(--ink);color:var(--paper)}
+@media (prefers-reduced-motion:reduce){#log{transition:none}}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:.35rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--ink-3);font-weight:600}
+.kind{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;
+      background:var(--accent-soft);color:var(--accent-ink);padding:.12rem .4rem;border-radius:999px}
+#preview img{display:block;max-width:100%;height:auto;border:1px solid var(--line);
+     border-radius:10px;background:#fff}
+.note{font-size:.88rem;color:var(--ink-2);background:var(--paper);border:1px solid var(--line);
+      border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;
+      padding:.8rem 1rem;margin:1rem 0}
+footer{border-top:1px solid var(--line);margin-top:2rem;padding:1.6rem 0 2.4rem;
+       font-size:.88rem;color:var(--ink-3)}
+.hide{display:none}
+dialog#edbox{width:min(1200px,96vw);height:min(88vh,900px);padding:0;border:0;
+     border-radius:var(--radius);background:var(--paper);color:var(--ink);
+     box-shadow:0 24px 64px -24px rgba(0,0,0,.5)}
+dialog#edbox::backdrop{background:rgba(10,12,16,.55)}
+.edhead{display:flex;align-items:center;gap:.8rem;padding:.7rem .9rem;
+     border-bottom:1px solid var(--line);font-size:.92rem;flex-wrap:wrap}
+.edhead #edstate{margin-left:auto;color:var(--ink-3);font-size:.88rem}
+#edframe{display:block;width:100%;height:calc(100% - 3.4rem);border:0;background:#fff}
+.chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.82rem;
+     background:var(--accent-soft);color:var(--accent-ink);padding:.2rem .5rem;
+     border-radius:999px}
+.chip button{border:0;background:transparent;color:inherit;cursor:pointer;
+     font:inherit;padding:0 .1rem}
+.tab{font:inherit;font-size:.86rem;padding:.25rem .6rem;border:1px solid var(--line);
+     background:var(--bg);color:var(--ink);border-radius:999px;cursor:pointer}
+.tab[aria-current="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <span class="brand"><span class="hex">&#11041;</span> cdxmorph</span>
+  <span class="sp"><a href="index.html">&larr; about</a></span>
+</div></header>
+
+<main class="wrap">
+  <h1>Run it here</h1>
+  <p class="lede">This page runs the whole program inside your browser. Your file is
+  read on this computer and never uploaded — there is no server behind this page.</p>
+
+  <div class="card">
+    <div id="drop" class="drop">
+      <button class="btn" id="pick">Choose a .cdxml file</button>
+      <input id="file" type="file" accept=".cdxml,.xml" class="hide">
+      <p>or drop one here — ChemDraw &rarr; File &rarr; Save As &rarr; ChemDraw XML</p>
+    </div>
+    <p id="log">Python starts when you pick a file. The first run downloads the
+runtime and the scientific libraries (tens of megabytes, once — your browser
+keeps them after that).</p>
+  </div>
+
+  <div class="card hide" id="summary">
+    <h2>What this file holds</h2>
+    <div id="stages"></div>
+  </div>
+
+  <div class="card hide" id="controls">
+    <h2>Animation</h2>
+    <div class="grid">
+      <div><label for="mode">What to animate</label>
+        <select id="mode">
+          <option value="auto">As drawn on the page</option>
+          <option value="turn">Reorientation only</option>
+        </select></div>
+      <div><label for="seconds">Seconds</label>
+        <input id="seconds" type="number" value="6" min="1" max="60" step="0.5"></div>
+      <div><label for="fps">Frames per second</label>
+        <input id="fps" type="number" value="20" min="4" max="40" step="1"></div>
+      <div><label for="width">Width in pixels</label>
+        <input id="width" type="number" value="800" min="200" max="2000" step="20"></div>
+      <div><label for="pause">Hold, seconds</label>
+        <input id="pause" type="number" value="0.3" min="0" max="3" step="0.1"></div>
+      <div><label for="fmt">Output</label>
+        <select id="fmt">
+          <option value="gif">Animated GIF</option>
+          <option value="png">Numbered PNG frames (zip)</option>
+        </select></div>
+    </div>
+    <p class="row" style="margin:.9rem 0 0">
+      <span class="check"><input type="checkbox" id="bounce" checked>
+        <label for="bounce" style="margin:0">play forward then back, so it loops without a jump</label></span>
+    </p>
+    <p class="row" id="saved" style="margin:.9rem 0 0"></p>
+    <p class="row" style="margin-top:1rem">
+      <button class="btn" id="render">Render</button>
+      <button class="btn ghost" id="still">Structures as drawn</button>
+      <button class="btn ghost" id="editors">Mapping editor</button>
+    </p>
+    <p class="note" id="mp4note">MP4 is the one thing this page cannot do — its encoder
+    is not available in a browser. Render a GIF here, or use the
+    <a href="cdxmorph.zip">download</a> for MP4.</p>
+  </div>
+
+  <div class="card hide" id="out">
+    <h2>Result</h2>
+    <p class="row" id="links"></p>
+    <div id="preview"></div>
+  </div>
+</main>
+
+<dialog id="edbox">
+  <div class="edhead">
+    <strong>Pairing editor</strong>
+    <span id="edtabs" class="row"></span>
+    <span id="edstate"></span>
+    <button class="btn ghost" id="edclose">Close</button>
+  </div>
+  <iframe id="edframe" title="click atoms to pair them"></iframe>
+</dialog>
+
+<footer><div class="wrap">Developed by Ryan Shenvi @ ShenviLab —
+  <a href="https://shenvilab.org">shenvilab.org</a></div></footer>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const logEl = $("log");
+let worker = null, pending = new Map(), seq = 0;
+let fileName = null, fileBytes = null, config = null;
+
+let flashTimer = null;
+function flash() {
+  logEl.classList.add("flash");
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => logEl.classList.remove("flash"), 420);
+}
+
+function say(text) {
+  logEl.textContent += (logEl.textContent ? "\n" : "") + text;
+  logEl.scrollTop = logEl.scrollHeight;
+  flash();
+}
+
+function ensureWorker() {
+  if (worker) return worker;
+  worker = new Worker("cdxmorph-worker.js");
+  worker.onmessage = (ev) => {
+    const m = ev.data || {};
+    if (m.log !== undefined) { say(m.log); return; }
+    const slot = pending.get(m.id);
+    if (!slot) return;
+    pending.delete(m.id);
+    m.ok ? slot.resolve(m) : slot.reject(new Error(m.error || "failed"));
+  };
+  worker.onerror = (e) => say("worker error: " + (e.message || e.filename));
+  return worker;
+}
+
+function ask(cmd, extra) {
+  const id = ++seq;
+  const msg = Object.assign({ id: id, cmd: cmd, name: fileName,
+                              bytes: fileBytes, config: config }, extra || {});
+  return new Promise((resolve, reject) => {
+    pending.set(id, { resolve: resolve, reject: reject });
+    ensureWorker().postMessage(msg);
+  });
+}
+
+function busy(on) {
+  for (const id of ["render", "still", "editors"]) $(id).disabled = on;
+  if (on) flash();
+}
+
+function download(bytes, name, type) {
+  const url = URL.createObjectURL(new Blob([bytes], { type: type }));
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.textContent = "Download " + name;
+  a.className = "btn";
+  return { link: a, url: url };
+}
+
+/* ---------- picking a file ---------- */
+$("pick").onclick = () => $("file").click();
+$("file").onchange = (e) => { if (e.target.files[0]) load(e.target.files[0]); };
+const drop = $("drop");
+["dragenter", "dragover"].forEach(t => drop.addEventListener(t, (e) => {
+  e.preventDefault(); drop.classList.add("hot"); }));
+["dragleave", "drop"].forEach(t => drop.addEventListener(t, (e) => {
+  e.preventDefault(); drop.classList.remove("hot"); }));
+drop.addEventListener("drop", (e) => {
+  const f = e.dataTransfer.files[0];
+  if (f) load(f);
+});
+
+async function load(file) {
+  fileName = file.name;
+  fileBytes = new Uint8Array(await file.arrayBuffer());
+  config = null; mappings = {}; showSaved();
+  logEl.textContent = "";
+  say("read " + file.name + " (" + Math.round(file.size / 1024) + " KB)");
+  busy(true);
+  try {
+    const { report } = await ask("describe");
+    show(report);
+    $("controls").classList.remove("hide");
+    say("this file holds " + (report.structures || "?") + " structures");
+  } catch (err) {
+    say("could not read it: " + err.message);
+  }
+  busy(false);
+}
+
+function show(rep) {
+  const rows = (rep.stages || []).map((s, i) => {
+    const kind = s.kind === "turn" ? "reorientation"
+               : (s.kind === "morph" ? "reaction" : "transition");
+    const detail = s.kind === "turn"
+      ? ((s.rotation_deg ? s.rotation_deg + "° turn" : "turn") +
+         (s.bonds ? ", " + s.bonds + " bonds carried" : "") +
+         (s.pairing ? " (" + s.pairing + ")" : ""))
+      : (s.bonds || "—");
+    return "<tr><td>" + (i + 1) + "</td><td><span class='kind'>" + kind +
+           "</span></td><td>" + detail + "</td></tr>";
+  }).join("");
+  $("stages").innerHTML = rows
+    ? "<table><tr><th>Step</th><th>Kind</th><th>What happens</th></tr>" +
+      rows + "</table>"
+    : "<p>No animated step found on this page.</p>";
+  $("summary").classList.remove("hide");
+  if (rep.turns) $("mode").value = "auto";
+  $("mode").parentElement.style.display = rep.turns ? "" : "none";
+}
+
+/* ---------- rendering ---------- */
+$("render").onclick = async () => {
+  busy(true);
+  $("out").classList.add("hide");
+  say("rendering… this runs on your machine, so give it a moment");
+  const opts = {
+    mode: $("mode").value === "turn" ? "turn" : "morph",
+    seconds: parseFloat($("seconds").value),
+    fps: parseFloat($("fps").value),
+    width: parseInt($("width").value, 10),
+    pause: parseFloat($("pause").value),
+    bounce: $("bounce").checked,
+    fmt: $("fmt").value
+  };
+  config = currentConfig();
+  const t0 = performance.now();
+  try {
+    const { report, data } = await ask("animate", { opts: opts });
+    const secs = ((performance.now() - t0) / 1000).toFixed(1);
+    say("done in " + secs + " s — " + (report.frames || "?") + " frames, " +
+        (report.size || "") + ", " + Math.round(data.length / 1024) + " KB");
+    const isGif = (report.name || "").endsWith(".gif");
+    const d = download(data, report.name || "animation.gif",
+                       isGif ? "image/gif" : "application/zip");
+    $("links").innerHTML = ""; $("links").appendChild(d.link);
+    $("preview").innerHTML = "";
+    if (isGif) {
+      const img = document.createElement("img");
+      img.src = d.url; img.alt = "the animation you just rendered";
+      $("preview").appendChild(img);
+    }
+    $("out").classList.remove("hide");
+  } catch (err) {
+    say("render failed: " + err.message);
+  }
+  busy(false);
+};
+
+$("still").onclick = async () => {
+  busy(true);
+  say("drawing every structure…");
+  try {
+    const { data } = await ask("still");
+    const d = download(data, "structures.png", "image/png");
+    $("links").innerHTML = ""; $("links").appendChild(d.link);
+    $("preview").innerHTML = "";
+    const img = document.createElement("img");
+    img.src = d.url; img.alt = "every structure as the program draws it";
+    $("preview").appendChild(img);
+    $("out").classList.remove("hide");
+    say("done");
+  } catch (err) { say("failed: " + err.message); }
+  busy(false);
+};
+
+let mappings = {}, pages = [], kindOf = {};
+
+function showSaved() {
+  const keys = Object.keys(mappings).sort();
+  $("saved").innerHTML = keys.length
+    ? "Saved pairings: " + keys.map(k =>
+        "<span class='chip'>" + (kindOf[k] || "transition " + k) + " (" +
+        Object.keys(mappings[k].pairs || {}).length + " pairs)" +
+        "<button title='forget this one' data-drop='" + k + "'>&times;</button></span>"
+      ).join(" ")
+    : "";
+  $("saved").querySelectorAll("[data-drop]").forEach(b => {
+    b.onclick = () => { delete mappings[b.dataset.drop]; showSaved(); refresh(); };
+  });
+}
+
+function currentConfig() {
+  return Object.keys(mappings).length ? { by_stage: mappings } : null;
+}
+
+async function refresh() {
+  config = currentConfig();
+  try {
+    const { report } = await ask("describe");
+    show(report);
+  } catch (err) { say("could not re-read the file: " + err.message); }
+}
+
+function openEditor(i) {
+  const p = pages[i];
+  $("edframe").srcdoc = p.html;
+  $("edstate").textContent = (p.name || ("transition " + p.stage)) +
+    " — click an atom on the left, then its partner on the right, then Save mapping";
+  $("edtabs").querySelectorAll(".tab").forEach((t, j) =>
+    t.setAttribute("aria-current", j === i ? "true" : "false"));
+}
+
+$("editors").onclick = async () => {
+  busy(true);
+  say("building the pairing editor…");
+  try {
+    config = currentConfig();
+    const { report } = await ask("editors");
+    pages = Array.isArray(report) ? report : (report.pages || []);
+    if (!pages.length) {
+      say("this page has no reaction to pair — every step is a reorientation");
+    } else {
+      $("edtabs").innerHTML = "";
+      kindOf = {};
+      pages.forEach(p => { kindOf[String(p.stage)] = p.name || ("transition " + p.stage); });
+      pages.forEach((p, i) => {
+        const t = document.createElement("button");
+        t.className = "tab"; t.textContent = p.name || ("transition " + p.stage);
+        t.onclick = () => openEditor(i);
+        $("edtabs").appendChild(t);
+      });
+      $("edtabs").style.display = pages.length > 1 ? "" : "none";
+      openEditor(0);
+      $("edbox").showModal();
+    }
+  } catch (err) { say("failed: " + err.message); }
+  busy(false);
+};
+
+$("edclose").onclick = () => $("edbox").close();
+
+/* The editor posts its pairing here when Save is pressed.  It travels
+   inside this browser; nothing is uploaded. */
+window.addEventListener("message", (ev) => {
+  const d = ev.data;
+  if (!d || d.cdxmorph !== "mapping") return;
+  mappings[String(d.stage)] = d.mapping;
+  showSaved();
+  say("saved " + Object.keys(d.mapping.pairs || {}).length + " pairs for " +
+      (kindOf[String(d.stage)] || ("transition " + d.stage)) +
+      " — render again to use it");
+  refresh();
+});
+
+</script>
+</body>
+</html>
