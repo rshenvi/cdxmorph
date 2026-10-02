@@ -103,8 +103,9 @@ dialog#edbox::backdrop{background:rgba(10,12,16,.55)}
   <div class="card">
     <div id="drop" class="drop">
       <button class="btn" id="pick">Choose a .cdxml file</button>
-      <input id="file" type="file" accept=".cdxml,.xml" class="hide">
+      <input id="file" type="file" accept=".cdxml,.xml,.json" multiple class="hide">
       <p>or drop one here — ChemDraw &rarr; File &rarr; Save As &rarr; ChemDraw XML</p>
+      <p>Already have a mapping? Drop its <code>.json</code> in as well, together with the structure or after it, and it is used as saved.</p>
     </div>
     <p id="log">Python starts when you pick a file. The first run downloads the
 runtime and the scientific libraries (tens of megabytes, once — your browser
@@ -233,16 +234,49 @@ function download(bytes, name, type) {
 
 /* ---------- picking a file ---------- */
 $("pick").onclick = () => $("file").click();
-$("file").onchange = (e) => { if (e.target.files[0]) load(e.target.files[0]); };
+$("file").onchange = (e) => take(e.target.files);
 const drop = $("drop");
 ["dragenter", "dragover"].forEach(t => drop.addEventListener(t, (e) => {
   e.preventDefault(); drop.classList.add("hot"); }));
 ["dragleave", "drop"].forEach(t => drop.addEventListener(t, (e) => {
   e.preventDefault(); drop.classList.remove("hot"); }));
-drop.addEventListener("drop", (e) => {
-  const f = e.dataTransfer.files[0];
-  if (f) load(f);
-});
+drop.addEventListener("drop", (e) => take(e.dataTransfer.files));
+
+/* a structure and a mapping may arrive together, in either order */
+async function take(list) {
+  const files = Array.from(list || []);
+  const json = files.filter(f => /\.json$/i.test(f.name));
+  const struct = files.find(f => !/\.json$/i.test(f.name));
+  if (struct) await load(struct);
+  for (const f of json) await loadMapping(f);
+  if (json.length && !struct && fileBytes) await refresh();
+}
+
+/* A mapping as a file, so a pairing worked out once can be used again -
+ * and so anything published alongside a structure reproduces exactly.
+ * Accepts the three shapes the program writes: a "stages" list, a
+ * "by_stage" object, or a bare "pairs" for a single transition. */
+async function loadMapping(file) {
+  let d;
+  try {
+    d = JSON.parse(await file.text());
+  } catch (err) {
+    say("could not read " + file.name + ": " + err.message);
+    return;
+  }
+  let by = {};
+  if (d && d.by_stage) by = d.by_stage;
+  else if (d && Array.isArray(d.stages))
+    d.stages.forEach((blk, i) => { if (blk && Object.keys(blk).length) by[String(i + 1)] = blk; });
+  else if (d && d.pairs) by["1"] = d;
+  const n = Object.keys(by).length;
+  if (!n) { say(file.name + " holds no pairings"); return; }
+  Object.assign(mappings, by);
+  showSaved();
+  say("read " + file.name + ": " +
+      Object.keys(by).map(k => Object.keys(by[k].pairs || {}).length + " pairs for transition " + k)
+        .join(", "));
+}
 
 async function load(file) {
   fileName = file.name;
@@ -279,7 +313,11 @@ function show(rep) {
       rows + "</table>"
     : "<p>No animated step found on this page.</p>";
   $("summary").classList.remove("hide");
-  if (rep.turns) $("mode").value = "auto";
+  /* Reset on EVERY file, not only on one that has reorientations.  A
+   * hidden control keeps its value: pick "Reorientation only" on a file
+   * with a turn, load a reaction-only file next, and the selector
+   * disappears still holding "turn", which Render then submits. */
+  $("mode").value = "auto";
   $("mode").parentElement.style.display = rep.turns ? "" : "none";
 }
 
@@ -302,6 +340,7 @@ $("render").onclick = async () => {
   try {
     const { report, data } = await ask("animate", { opts: opts });
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
+    if (report.note) say(report.note);
     say("done in " + secs + " s — " + (report.frames || "?") + " frames, " +
         (report.size || "") + ", " + Math.round(data.length / 1024) + " KB");
     const isGif = (report.name || "").endsWith(".gif");

@@ -46,15 +46,27 @@ async function boot() {
   await py.loadPackage(["numpy", "scipy", "matplotlib", "pillow", "micropip"]);
 
   /* The wheel's name is kept in a one-line text file so that updating the
-   * program means replacing two files and editing nothing. */
-  let wheel = "cdxmorph-1.3.5-py3-none-any.whl";
+   * program means replacing two files and editing nothing.
+   *
+   * There is deliberately no built-in name to fall back on.  One was
+   * here, and it went stale: if wheel.txt could not be read the worker
+   * quietly installed a months-old version, so the page would run and
+   * look as though none of the fixes had landed - the worst kind of
+   * failure to diagnose.  wheel.txt ships beside this file, so not
+   * being able to read it means a broken upload, and saying so is more
+   * use than animating with the wrong program. */
+  let wheel = null;
   try {
     const r = await fetch("wheel.txt", { cache: "no-store" });
     if (r.ok) {
       const t = (await r.text()).trim();
       if (t) wheel = t;
     }
-  } catch (err) { /* keep the built-in name */ }
+  } catch (err) { /* reported below */ }
+  if (!wheel) {
+    throw new Error("could not read wheel.txt, which names the program to " +
+                    "install — check that it uploaded alongside this page");
+  }
   const url = new URL(wheel, self.location.href).href;
 
   log("installing " + wheel + "…");
