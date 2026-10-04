@@ -234,7 +234,16 @@ function download(bytes, name, type) {
 
 /* ---------- picking a file ---------- */
 $("pick").onclick = () => $("file").click();
-$("file").onchange = (e) => take(e.target.files);
+/* The input is reset after it is read.  A browser fires `change` only
+ * when the SELECTION changes, so picking the same path again - the
+ * obvious way to iterate on a drawing: edit in ChemDraw, save, reload -
+ * raised no event at all and the page silently kept the old bytes.
+ * Clearing the value makes every pick a fresh selection, the same file
+ * included.  Dropping a file needs no equivalent: a drop always fires. */
+$("file").onchange = async (e) => {
+  const input = e.target, files = input.files;
+  try { await take(files); } finally { input.value = ""; }
+};
 const drop = $("drop");
 ["dragenter", "dragover"].forEach(t => drop.addEventListener(t, (e) => {
   e.preventDefault(); drop.classList.add("hot"); }));
@@ -280,6 +289,16 @@ async function loadMapping(file) {
 
 async function load(file) {
   fileName = file.name;
+  /* A result belongs to the file that produced it.  Loading another
+   * structure used to leave the previous GIF and its download link
+   * sitting under the new file's summary, and with two similar
+   * structures nothing said which one you were looking at.  Clearing
+   * here - before the file is even read - means what is on screen
+   * always belongs to the file named above it. */
+  $("out").classList.add("hide");
+  $("preview").innerHTML = "";
+  $("links").innerHTML = "";
+  if ($("edbox").open) $("edbox").close();   /* its pages are of the old file */
   fileBytes = new Uint8Array(await file.arrayBuffer());
   config = null; mappings = {}; showSaved();
   logEl.textContent = "";
@@ -399,6 +418,13 @@ function currentConfig() {
 
 async function refresh() {
   config = currentConfig();
+  /* The same reasoning as loading a file: every caller here is a change
+   * of mapping - one loaded from disk, one saved from the editor, one
+   * dropped - and a result rendered under the old pairing no longer
+   * describes what the page is set to do. */
+  $("out").classList.add("hide");
+  $("preview").innerHTML = "";
+  $("links").innerHTML = "";
   try {
     const { report } = await ask("describe");
     show(report);
