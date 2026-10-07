@@ -320,7 +320,7 @@ function show(rep) {
     const kind = s.kind === "turn" ? "reorientation"
                : (s.kind === "morph" ? "reaction" : "transition");
     const detail = s.kind === "turn"
-      ? ((s.rotation_deg ? s.rotation_deg + "° turn" : "turn") +
+      ? ((s.rotation_deg ? s.rotation_deg + "° turn" : "moved in the page \u2014 no 3D copy to turn from") +
          (s.bonds ? ", " + s.bonds + " bonds carried" : "") +
          (s.pairing ? " (" + s.pairing + ")" : ""))
       : (s.bonds || "—");
